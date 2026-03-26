@@ -1,92 +1,100 @@
 -- Remade By Salvred(Hub)
--- Optimizado
+-- SHX
+-- Salvred Hub
 
-local Players = game:GetService("Players")
+-- SPACER
+
 local CoreGui = game:GetService("CoreGui")
-local RunService = game:GetService("RunService")
 
-local Player = Players.LocalPlayer
-local pg = Player:WaitForChild("PlayerGui")
+if CoreGui:FindFirstChild("Shiftlock (CoreGui)") then
+    return
+end
 
--- evitar duplicado
-if CoreGui:FindFirstChild("Shiftlock (CoreGui)") then return end
-
--- eliminar shiftlock del juego
-local s = pg:FindFirstChild("ShiftLockButton")
+local s = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ShiftLockButton")
 if s then s:Destroy() end
 
--- GUI
-local gui = Instance.new("ScreenGui")
-local btn = Instance.new("ImageButton")
-local cursor = Instance.new("ImageLabel")
+task.wait(1)
 
-gui.Name = "Shiftlock (CoreGui)"
-gui.Parent = CoreGui
-gui.ResetOnSpawn = false
+local ShiftLockScreenGui = Instance.new("ScreenGui")
+local ShiftLockButton = Instance.new("ImageButton")
+local ShiftlockCursor = Instance.new("ImageLabel")
 
-btn.Parent = gui
-btn.BackgroundTransparency = 1
-btn.Position = UDim2.new(0.8, 0, 1, 0)
-btn.AnchorPoint = Vector2.new(1, 1)
-btn.Size = UDim2.new(0.064, 0, 0.066, 0)
-btn.SizeConstraint = Enum.SizeConstraint.RelativeXX
-btn.Image = "rbxasset://textures/ui/mouseLock_off@2x.png"
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ContextActionService = game:GetService("ContextActionService")
+local Player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
-cursor.Parent = gui
-cursor.Image = "rbxasset://textures/MouseLockedCursor.png"
-cursor.Size = UDim2.new(0.03, 0, 0.03, 0)
-cursor.Position = UDim2.new(0.5, 0, 0.38, 0)
-cursor.AnchorPoint = Vector2.new(0.5, 0.5)
-cursor.BackgroundTransparency = 1
-cursor.Visible = false
+local States = {
+    Off = "rbxasset://textures/ui/mouseLock_off@2x.png",
+    On = "rbxasset://textures/ui/mouseLock_on@2x.png",
+    Lock = "rbxasset://textures/MouseLockedCursor.png",
+    Lock2 = "rbxasset://SystemCursors/Cross"
+}
 
 local MaxLength = 900000
 local EnabledOffset = CFrame.new(1.7, 0, 0)
 local DisabledOffset = CFrame.new(-1.7, 0, 0)
+local Active
 
-local active
+ShiftLockScreenGui.Name = "Shiftlock (CoreGui)"
+ShiftLockScreenGui.Parent = CoreGui
+ShiftLockScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ShiftLockScreenGui.ResetOnSpawn = false
 
-btn.MouseButton1Click:Connect(function()
-    if not active then
-        btn.Image = "rbxasset://textures/ui/mouseLock_on@2x.png"
-        cursor.Visible = true
+ShiftLockButton.Parent = ShiftLockScreenGui
+ShiftLockButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ShiftLockButton.BackgroundTransparency = 1
+ShiftLockButton.Position = UDim2.new(0.8, 0, 1, 0)
+ShiftLockButton.AnchorPoint = Vector2.new(1, 1)
+ShiftLockButton.Size = UDim2.new(0.064, 0, 0.066, 0)
+ShiftLockButton.SizeConstraint = Enum.SizeConstraint.RelativeXX
+ShiftLockButton.Image = States.Off
 
-        active = RunService.RenderStepped:Connect(function()
-            local char = Player.Character
-            if not char then return end
+ShiftlockCursor.Name = "Shiftlock Cursor"
+ShiftlockCursor.Parent = ShiftLockScreenGui
+ShiftlockCursor.Image = States.Lock
+ShiftlockCursor.Size = UDim2.new(0.03, 0, 0.03, 0)
+ShiftlockCursor.Position = UDim2.new(0.5, 0, 0.38, 0)
+ShiftlockCursor.AnchorPoint = Vector2.new(0.5, 0.5)
+ShiftlockCursor.SizeConstraint = Enum.SizeConstraint.RelativeXX
+ShiftlockCursor.BackgroundTransparency = 1
+ShiftlockCursor.Visible = false
 
-            local hum = char:FindFirstChild("Humanoid")
-            local root = char:FindFirstChild("HumanoidRootPart")
-            local cam = workspace.CurrentCamera
+ShiftLockButton.MouseButton1Click:Connect(function()
+    if not Active then
+        Active = RunService.RenderStepped:Connect(function()
+            Player.Character.Humanoid.AutoRotate = false
+            ShiftLockButton.Image = States.On
+            ShiftlockCursor.Visible = true
 
-            if not hum or not root or not cam then return end
-
-            hum.AutoRotate = false
-
-            local look = cam.CFrame.LookVector
-
-            root.CFrame = CFrame.new(
-                root.Position,
-                root.Position + Vector3.new(look.X, 0, look.Z) * MaxLength
+            Player.Character.HumanoidRootPart.CFrame =
+                CFrame.new(
+                Player.Character.HumanoidRootPart.Position,
+                Vector3.new(
+                    workspace.CurrentCamera.CFrame.LookVector.X * MaxLength,
+                    Player.Character.HumanoidRootPart.Position.Y,
+                    workspace.CurrentCamera.CFrame.LookVector.Z * MaxLength
+                )
             )
 
-            cam.CFrame *= EnabledOffset
-            cam.Focus *= EnabledOffset
+            workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * EnabledOffset
+            workspace.CurrentCamera.Focus =
+                CFrame.fromMatrix(
+                workspace.CurrentCamera.Focus.Position,
+                workspace.CurrentCamera.CFrame.RightVector,
+                workspace.CurrentCamera.CFrame.UpVector
+            ) * EnabledOffset
         end)
-
     else
-        btn.Image = "rbxasset://textures/ui/mouseLock_off@2x.png"
-        cursor.Visible = false
+        Player.Character.Humanoid.AutoRotate = true
+        ShiftLockButton.Image = States.Off
+        workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * DisabledOffset
+        ShiftlockCursor.Visible = false
 
-        local char = Player.Character
-        local hum = char and char:FindFirstChild("Humanoid")
-        if hum then hum.AutoRotate = true end
-
-        workspace.CurrentCamera.CFrame *= DisabledOffset
-
-        if active then
-            active:Disconnect()
-            active = nil
+        if Active then
+            Active:Disconnect()
+            Active = nil
         end
     end
 end)
