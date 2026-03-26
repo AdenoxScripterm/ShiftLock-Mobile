@@ -2,9 +2,6 @@
 -- SHX
 -- Salvred Hub
 
-local s = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ShiftLockButton")
-if s then s:Destroy() end
-
 -- SPACER
 
 local CoreGui = game:GetService("CoreGui")
@@ -12,6 +9,11 @@ local CoreGui = game:GetService("CoreGui")
 if CoreGui:FindFirstChild("Shiftlock (CoreGui)") then
     return
 end
+
+local s = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ShiftLockButton")
+if s then s:Destroy() end
+
+task.wait(1)
 
 local ShiftLockScreenGui = Instance.new("ScreenGui")
 local ShiftLockButton = Instance.new("ImageButton")
